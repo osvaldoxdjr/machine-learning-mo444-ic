@@ -1,21 +1,7 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import random
-
-def feature_scaling(data, type='std'):
-
-    n_features = np.shape(data)[1]
-
-    for n in range(n_features):
-        if type == 'minmax':
-            min = data.iloc[:, n].min()
-            max = data.iloc[:, n].max()
-            data.iloc[:, n] = (data.iloc[:, n] - min) / (max - min)
-        elif type == 'std':
-            mean = data.iloc[:, n].mean()
-            std = data.iloc[:, n].std()
-            data.iloc[:, n] = (data.iloc[:, n] - mean) / std
-    return data
 
 def perform_GD(thetas, LR, feature_train, target_train):
 
@@ -26,7 +12,6 @@ def perform_GD(thetas, LR, feature_train, target_train):
     return thetas
 
 def perform_NE(feature_train, target_train):
-
     a1 = np.linalg.pinv(np.dot(feature_train.transpose(),feature_train))
     thetas = np.dot(a1,feature_train.transpose())
     thetas = np.dot(thetas,target_train)
@@ -35,51 +20,90 @@ def perform_NE(feature_train, target_train):
 def cost_function(thetas, data_test, data_target):
 
     m_examples = np.shape(data_test)[0]
-    error = np.square((np.dot(thetas, feature_train.transpose())) - target_train)
+    error = np.square((np.dot(thetas, data_test.transpose())) - data_target)
     return np.sum(error)/m_examples
+
+def increase_complexity(feature_train, comp):
+
+    n_features = np.shape(feature_train)[1]
+
+    aux = feature_train
+
+    for n in range(n_features):
+        m = np.multiply(feature_train[:,n],aux[:,n:].transpose())
+        print(np.shape(m.transpose()),'aaa',np.shape(feature_train))
+        feature_train = np.concatenate((feature_train, m.transpose()), axis=1)
+
+    print(feature_train)
+    return feature_train
 
 if __name__ == "__main__":
 
-    LR = 0.1
-    t = []
-    v = []
-    x0 = 1
+    LR = 0.01
 
+    # Load data
     data_test = pd.read_csv('test.csv')
     data_test_target = pd.read_csv('test_target.csv')
     data_train = pd.read_csv('train.csv')
 
+    #for i in range(np.shape(data_train)
+
+    # Select train predictable features and target
     feature_train = data_train.iloc[:24500,2:60]
     target_train = data_train.iloc[:24500,60]
 
+    # Select validation predictable features and target
     feature_validation = data_train.iloc[24501:,2:60]
     target_validation = data_train.iloc[24501:,60]
 
+    # Select test predictable features and target
+    feature_test = data_test.iloc[:,2:]
+    target_test = data_test_target
+
+    # Adjust index after iloc
     feature_validation = feature_validation.reset_index(drop=True)
     target_validation = target_validation.reset_index(drop=True)
 
-    for i in range(np.shape(feature_train)[0]):
-        t.append(x0)
+    # Generating X0 = 1
+    tr = np.ones(np.shape(feature_train)[0])
+    va = np.ones(np.shape(feature_validation)[0])
+    te = np.ones(np.shape(feature_test)[0])
 
-    for i in range(np.shape(feature_validation)[0]):
-        v.append(x0)
+    # Feature Scalling
+    feature_train  = MinMaxScaler().fit_transform(feature_train)
+    feature_validation = MinMaxScaler().fit_transform(feature_validation)
 
-    feature_scaling(feature_train, 'minmax')
-    feature_scaling(feature_validation, 'minmax')
+    #target_train = target_train.astype('float64')
+    feature_test = np.asarray(feature_test)
 
-    feature_train.insert(0, 'X0', t)
+    #target normalization
+    #target_train = (target_train-target_train.min())/(target_train.max()-target_train.min())
 
-    feature_validation.insert(0, 'X0', v)
+    # Inserting X0 to feature datasets
+    np.insert(feature_train, 0, tr)
+    np.insert(feature_validation, 0, va)
+    np.insert(feature_test, 0, te)
 
+    print(np.shape(feature_train))
+
+    #feature_train = increase_complexity(feature_train,1)
+
+    print(np.shape(feature_train))
+
+    # Initializing thetas
     thetas = np.ones(np.shape(feature_train)[1])
-
 
     a_value = 0
     diff = 200
 
 
-    while abs(diff) >= 10:
-        n_value = cost_function(thetas, feature_validation, target_validation)
+    print('testeeeee')
+    print(feature_train[0:5,0:3],'testeeee\n', feature_train[0:5,58:61])
+    i = input('asdad')
+
+    # Perfoming GD and calulating cost function
+    while abs(diff) >= 100:
+        n_value = cost_function(thetas, feature_train, target_train)
         print("The cost is: %e"%n_value)
         diff = n_value-a_value
         print("The diff from previous and actual is: %e\n"%diff)
@@ -87,7 +111,13 @@ if __name__ == "__main__":
         a_value = n_value
     print(thetas)
     print('separacao')
-    a = perform_NE(feature_train,target_train)
+    a = perform_NE(data_train.iloc[:,2:60],data_train.iloc[:,60])
     print(a)
-    print(cost_function(a,feature_validation,target_validation))
+    print('%e'%(cost_function(a,feature_train,target_train)))
+    print('%e' % (cost_function(thetas, feature_train, target_train)))
+
     print(np.shape(a),np.shape(thetas))
+
+    print('Y predicted')
+    print((np.dot(thetas,feature_validation.transpose()))*(target_train.max()-target_train.min())+target_train.min())
+    print(target_validation)
