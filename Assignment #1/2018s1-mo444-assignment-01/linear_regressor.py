@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.metrics import r2_score
+import matplotlib.pyplot as plt
 import random
 
 def perform_GD(thetas, LR, feature_train, target_train):
-
     print("Performing GD!\n")
     m_examples = np.shape(feature_train)[0]
     error = np.dot(thetas,feature_train.transpose())-target_train
@@ -21,7 +22,7 @@ def cost_function(thetas, data_test, data_target):
 
     m_examples = np.shape(data_test)[0]
     error = np.square((np.dot(thetas, data_test.transpose())) - data_target)
-    return np.sum(error)/m_examples
+    return np.sum(error)/(2*m_examples)
 
 def increase_complexity(feature_train, comp):
 
@@ -31,11 +32,25 @@ def increase_complexity(feature_train, comp):
 
     for n in range(n_features):
         m = np.multiply(feature_train[:,n],aux[:,n:].transpose())
-        print(np.shape(m.transpose()),'aaa',np.shape(feature_train))
         feature_train = np.concatenate((feature_train, m.transpose()), axis=1)
-
-    print(feature_train)
     return feature_train
+
+def plot_function_2d(y, x, ne):
+
+    # Create plots with pre-defined labels.
+    fig, ax = plt.subplots()
+    ax.plot(x, y, 'k--', label='Gradient Discent')
+    ax.plot(x, ne, 'k:', label='Normal Equation')
+
+    legend = ax.legend(loc='upper center', shadow=True, fontsize='x-large')
+
+    # Put a nicer background color on the legend.
+    legend.get_frame().set_facecolor('#00FFCC')
+
+    plt.show()
+
+def plot_function_3d(y, x, ne):
+    pass
 
 if __name__ == "__main__":
 
@@ -49,8 +64,8 @@ if __name__ == "__main__":
     #for i in range(np.shape(data_train)
 
     # Select train predictable features and target
-    feature_train = data_train.iloc[:24500,2:60]
-    target_train = data_train.iloc[:24500,60]
+    feature_train = data_train.iloc[:,2:60]
+    target_train = data_train.iloc[:,60]
 
     # Select validation predictable features and target
     feature_validation = data_train.iloc[24501:,2:60]
@@ -84,11 +99,7 @@ if __name__ == "__main__":
     np.insert(feature_validation, 0, va)
     np.insert(feature_test, 0, te)
 
-    print(np.shape(feature_train))
-
-    #feature_train = increase_complexity(feature_train,1)
-
-    print(np.shape(feature_train))
+    feature_train = increase_complexity(feature_train,1)
 
     # Initializing thetas
     thetas = np.ones(np.shape(feature_train)[1])
@@ -96,22 +107,28 @@ if __name__ == "__main__":
     a_value = 0
     diff = 200
 
+    x = []
+    y = []
 
-    print('testeeeee')
-    print(feature_train[0:5,0:3],'testeeee\n', feature_train[0:5,58:61])
-    i = input('asdad')
+    n = 1
+
 
     # Perfoming GD and calulating cost function
-    while abs(diff) >= 100:
+    while abs(diff) >= 20:
         n_value = cost_function(thetas, feature_train, target_train)
+        y.append(n_value)
+        x.append(n)
+        n += 1
         print("The cost is: %e"%n_value)
         diff = n_value-a_value
         print("The diff from previous and actual is: %e\n"%diff)
+        pred = (np.dot(thetas, feature_train.transpose()))
+        print('Custo R2: %f'%r2_score(target_train, pred))
         thetas = perform_GD(thetas, LR, feature_train, target_train)
         a_value = n_value
     print(thetas)
     print('separacao')
-    a = perform_NE(data_train.iloc[:,2:60],data_train.iloc[:,60])
+    a = perform_NE(feature_train, target_train)
     print(a)
     print('%e'%(cost_function(a,feature_train,target_train)))
     print('%e' % (cost_function(thetas, feature_train, target_train)))
@@ -121,3 +138,5 @@ if __name__ == "__main__":
     print('Y predicted')
     print((np.dot(thetas,feature_validation.transpose()))*(target_train.max()-target_train.min())+target_train.min())
     print(target_validation)
+
+    plot_function_2d(y,x, np.full(len(x),cost_function(a,feature_train,target_train)))
