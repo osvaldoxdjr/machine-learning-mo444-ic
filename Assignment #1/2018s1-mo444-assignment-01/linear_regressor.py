@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import random
 
 def perform_GD(thetas, LR, feature_train, target_train):
-    print("Performing GD!\n")
     m_examples = np.shape(feature_train)[0]
     error = np.dot(thetas,feature_train.transpose())-target_train
     thetas = thetas - np.dot(feature_train.transpose(),error)*LR/m_examples
@@ -19,7 +18,6 @@ def perform_NE(feature_train, target_train):
     return thetas
 
 def cost_function(thetas, data_test, data_target):
-
     m_examples = np.shape(data_test)[0]
     error = np.square((np.dot(thetas, data_test.transpose())) - data_target)
     return np.sum(error)/(2*m_examples)
@@ -35,7 +33,6 @@ def remove_discrete_variables(feature_train):
 def increase_complexity(feature_train, comp):
 
     n_features = np.shape(feature_train)[1]
-
     aux = feature_train
 
     for n in range(n_features):
@@ -75,7 +72,7 @@ def plot_function_3d(y, x, ne):
 
 if __name__ == "__main__":
 
-    LR = 0.01
+    LR = 0.001
 
     # Load data
     data_test = pd.read_csv('test.csv')
@@ -83,8 +80,8 @@ if __name__ == "__main__":
     data_train = pd.read_csv('train.csv')
 
     # Select train predictable features and target
-    feature_train = data_train.iloc[:,2:60]
-    target_train = data_train.iloc[:,60]
+    feature_train = data_train.iloc[:25000,2:60]
+    target_train = data_train.iloc[:25000,60]
 
     # Select validation predictable features and target
     feature_validation = data_train.iloc[24501:,2:60]
@@ -98,112 +95,89 @@ if __name__ == "__main__":
     feature_validation = feature_validation.reset_index(drop=True)
     target_validation = target_validation.reset_index(drop=True)
 
+    # Transforming into array
+    feature_train = np.asarray(feature_train)
+    feature_validation = np.asarray(feature_validation)
+    feature_test = np.asarray (feature_test)
+    target_train = np.asarray(target_train)
+    target_validation = np.asarray(target_validation)
+    target_test = np.asarray(target_test)
+
     # Generating X0 = 1
     tr = np.ones(np.shape(feature_train)[0])
     va = np.ones(np.shape(feature_validation)[0])
     te = np.ones(np.shape(feature_test)[0])
 
     # Feature Scalling
-    feature_train  = MinMaxScaler().fit_transform(feature_train)
-    feature_validation = MinMaxScaler().fit_transform(feature_validation)
-
-    #target_train = target_train.astype('float64')
-    feature_test = np.asarray(feature_test)
-
-    #target normalization
-    #target_train = (target_train-target_train.min())/(target_train.max()-target_train.min())
+    scale_sel = 'minmax'
+    if scale_sel == 'minmax':
+        X_scaler =  MinMaxScaler()
+    else:
+        X_scaler = StandardScaler()
+    feature_train  = X_scaler.fit_transform(feature_train)
+    feature_validation = X_scaler.transform(feature_validation)
+    feature_test = X_scaler.transform(feature_test)
 
     # Remove discrete variables
     #feature_train = remove_discrete_variables(feature_train)
+    #feature_validation = remove_discrete_variables(feature_validation)
+    #feature_test = remove_discrete_variables(feature_test)
+
+    # Increase complexity
+    #feature_train = increase_complexity(feature_train,1)
 
     # Inserting X0 to feature datasets
     np.insert(feature_train, 0, tr)
     np.insert(feature_validation, 0, va)
     np.insert(feature_test, 0, te)
 
-    #feature_train = increase_complexity(feature_train,1)
-
-    target_train = np.asarray(target_train)
-
+    # Plot hist
     plot_hist(target_train)
-
     m_before = np.shape(feature_train)[0]
-
-    feature_train, target_train = removing_examples(feature_train, target_train, 5000)
-
+    print(np.shape(feature_train), np.shape(target_train))
+    feature_train, target_train = removing_examples(feature_train, target_train, 4000)
     m_after = np.shape(feature_train)[0]
-
-    print('Foram removidos %i exemplos'%(m_before-m_after))
-
+    print('%i examples were removed!'%(m_before-m_after))
     plot_hist(np.asarray(target_train))
 
-    aux = feature_train.copy()
-    J = []
+    # Initializing thetas
+    thetas = np.ones(np.shape(feature_train)[1])
 
+    a_value = 0
 
-    #for i in range(np.shape(feature_train)[1]-1):
-    for i in range(1):
-        #feature_train = np.delete(feature_train, i+1, 1)
+    x = []
+    y = []
 
-        # Initializing thetas
-        thetas = np.ones(np.shape(feature_train)[1])
+    n = 1
 
-        a_value = 0
-
-        x = []
-        y = []
-
-        n = 1
-
-        # Perfoming GD and calulating cost function
-        for i in range(100):
-            n_value = cost_function(thetas, feature_train, target_train)
-            y.append(n_value)
-            x.append(n)
-            n += 1
-            print("The cost is: %e"%n_value)
-            diff = n_value-a_value
+    # Perfoming GD and calulating cost function
+    for i in range(1000):
+        n_value = cost_function(thetas, feature_train, target_train)
+        y.append(n_value)
+        x.append(n)
+        n += 1
+        diff = n_value-a_value
+        if i%200 == 0:
+            print("Performing GD!\n")
+            print("It has passed %i iterations"%i)
+            print("The cost is: %e" % n_value)
             print("The diff from previous and actual is: %e\n"%diff)
-            pred = (np.dot(thetas, feature_train.transpose()))
-            #print('Custo R2: %f'%r2_score(target_train, pred))
-            thetas = perform_GD(thetas, LR, feature_train, target_train)
-            a_value = n_value
-        print(thetas)
-        print('separacao')
-        a = perform_NE(feature_train, target_train)
-        print(a)
-        print('%e'%(cost_function(a,feature_train,target_train)))
-        print('%e' % (cost_function(thetas, feature_train, target_train)))
+        pred = (np.dot(thetas, feature_train.transpose()))
+        thetas = perform_GD(thetas, LR, feature_train, target_train)
+        a_value = n_value
 
-        print(np.shape(a),np.shape(thetas))
+    thetas_NE = perform_NE(feature_train, target_train)
+    cost_NE = cost_function(thetas_NE,feature_train,target_train)
+    cost_GD = cost_function(thetas, feature_train, target_train)
 
-        plot_function_2d(y,x, np.full(len(x),cost_function(a,feature_train,target_train)))
+    print(thetas)
+    print(thetas_NE)
 
-        J.append(n_value)
-        feature_train = aux.copy()
+    print('Cost NE: %e\nCost GD: %e\n'%(cost_NE, cost_GD))
 
-    for j in J:
-        print('%e'%j)
-
-    target_train = np.asarray(target_train)
-
-    for i in range(20):
-        print('%.2f - %.2f'%(np.dot(thetas, feature_train.transpose())[i], target_train[i]))
+    plot_function_2d(y,x, np.full(len(x),cost_NE))
 
     mean_err = abs((target_train - np.dot(thetas, feature_train.transpose()))).mean()
-
-    print("A média de erro do número de compartilhamentos é %.2f"%mean_err)
-
-    print('\n\n\n')
-
-    target_test = np.asarray(target_test)
-    feature_test = np.asarray(feature_test)
-
-    #print(cost_function(thetas, feature_test, target_test))
-
-    for i in range(20):
-        print('%.2f - %.2f'%(np.dot(thetas, feature_test.transpose())[i], target_test[i]))
-
-    mean_err = abs((target_test - np.dot(thetas, feature_test.transpose()))).mean()
-
-    print("A média de erro do número de compartilhamentos é %.2f"%mean_err)
+    print("(Train) A média de erro do número de compartilhamentos é %.2f"%mean_err)
+    mean_err = abs((target_validation - np.dot(thetas, feature_validation.transpose()))).mean()
+    print("(Validation) A média de erro do número de compartilhamentos é %.2f"%mean_err)
