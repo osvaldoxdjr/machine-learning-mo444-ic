@@ -86,8 +86,8 @@ if __name__ == "__main__":
     LRs = [0.1]
     reg = True
     rem_disc = True
-    lamb = 0.5
-    comp = 1
+    lamb = 100
+    comp = 2
     norm = True
     x_final = []
     y_final = []
@@ -132,7 +132,7 @@ if __name__ == "__main__":
             else:
                 X_scaler = StandardScaler()
             feature_train  = X_scaler.fit_transform(feature_train)
-            feature_validation = X_scaler.fit_transform(feature_validation)
+            feature_validation = X_scaler.transform(feature_validation)
             feature_test = X_scaler.transform(feature_test)
 
         # Remove discrete variables
@@ -199,8 +199,9 @@ if __name__ == "__main__":
         cost_GD_v = cost_function(thetas, feature_validation, target_validation, reg, lamb)
         print('Validation\nCost NE: %e\nCost GD: %e\n'%(cost_NE_v, cost_GD_v))
 
-        #print(thetas)
-        #print(thetas_NE)
+        print(thetas)
+        print(thetas_NE)
+        print(thetas - thetas_NE)
 
         #plot_function_2d(y,x, np.full(len(x),cost_NE))
 
@@ -209,12 +210,12 @@ if __name__ == "__main__":
         print('GD')
         mean_err = abs((target_train - np.dot(thetas, feature_train.transpose()))).mean()
         print("(Train) A média de erro do número de compartilhamentos é %.2f"%mean_err)
-        mean_err = abs((target_validation - np.dot(thetas, feature_validation.transpose()))).mean()
+        mean_err = abs((target_test - np.dot(thetas, feature_test.transpose()))).mean()
         print("(Validation) A média de erro do número de compartilhamentos é %.2f"%mean_err)
         print('NE')
         mean_err = abs((target_train - np.dot(thetas_NE, feature_train.transpose()))).mean()
         print("(Train) A média de erro do número de compartilhamentos é %.2f"%mean_err)
-        mean_err = abs((target_validation - np.dot(thetas_NE, feature_validation.transpose()))).mean()
+        mean_err = abs((target_test - np.dot(thetas_NE, feature_test.transpose()))).mean()
         print("(Validation) A média de erro do número de compartilhamentos é %.2f"%mean_err)
 
     name_plot = 'reg-' + str(reg) + '_' + 'comp-' + str(comp) + '_' + 'lambda-' + str(lamb) + '_' + 'rem disc-' + str(rem_disc)
@@ -234,7 +235,7 @@ if __name__ == "__main__":
     ax.yaxis.get_major_formatter().set_powerlimits((0, 1))
 
     # Put a nicer background color on the legend.
-    legend.get_frame().set_facecolor('#00FFCC')
+    #legend.get_frame().set_facecolor('#00FFCC')
 
     plt.savefig(name_plot+'.png')
 
