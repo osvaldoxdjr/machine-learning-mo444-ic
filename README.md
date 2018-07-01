@@ -7,4 +7,7 @@ This repository has code related to the module "Pattern Recognition and Machine 
 * Gradient Descent
 * Normal Equation
 * Linear Regression
-* ...
+* Convolution Neural Networks
+* Transfer Learning
+* Feature Engineering
+* Computer Vision
