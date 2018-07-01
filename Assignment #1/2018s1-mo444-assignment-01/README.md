@@ -1,4 +1,4 @@
-# Machine Learning Module - UNICAMP - MO444
+# Machine Learning Module - UNICAMP - MO444 - Assignment #1
 
-Here it follows a code to perform a gradient discent without using a specific library.
-Read the report to understand the dataset and the experiments.
+Objective
+Explore linear regression alternatives and come up with the best possible model to the problems, avoiding overfitting. In particular, to predict the number of shares in social networks (popularity).
