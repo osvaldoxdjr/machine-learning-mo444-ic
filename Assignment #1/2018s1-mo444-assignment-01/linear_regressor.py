@@ -83,7 +83,7 @@ def plot_function_3d(y, x, ne):
 
 if __name__ == "__main__":
 
-    LRs = [0.1]
+    LRs = [0.1, 0.01, 0.001]
     reg = True
     rem_disc = True
     lamb = 100
@@ -95,9 +95,9 @@ if __name__ == "__main__":
     for LR in LRs:
 
         # Load data
-        data_test = pd.read_csv('test.csv')
-        data_test_target = pd.read_csv('test_target.csv')
-        data_train = pd.read_csv('train.csv')
+        data_test = pd.read_csv('Data/test.csv')
+        data_test_target = pd.read_csv('Data/test_target.csv')
+        data_train = pd.read_csv('Data/train.csv')
 
         # Select train predictable features and target
         feature_train = data_train.iloc[:25000,2:60]
@@ -220,6 +220,7 @@ if __name__ == "__main__":
 
     name_plot = 'reg-' + str(reg) + '_' + 'comp-' + str(comp) + '_' + 'lambda-' + str(lamb) + '_' + 'rem disc-' + str(rem_disc)
 
+    print(np.shape(y_final))
     # Create plots with pre-defined labels.
     fig, ax = plt.subplots()
     ax.plot(x, y_final[0], 'k-', label='LR = 0.1')
