@@ -1,7 +1,7 @@
 # Machine Learning Module - UNICAMP - MO444 - Assignment #3
 
-Predict the model of a camera based on the content of their photographs. In other words,
-given an image, from which camera model did it come from?
+Given a collection of news headlines, produce meaningful clusters of headlines. In other
+words, you should cluster them in such a way that each cluster has a common “theme”.
 
 ## Authors
 
